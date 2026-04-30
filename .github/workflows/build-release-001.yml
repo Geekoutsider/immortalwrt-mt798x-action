@@ -195,7 +195,7 @@ jobs:
         find openwrt/bin/targets -name "*sysupgrade.bin" -type f -exec cp -v {} rom/ \;
         
         # 验证
-        if [ ! -f rom/*-sysupgrade.bin ]; then
+        if ! ls rom/*-sysupgrade.bin >/dev/null 2>&1; then
           echo "❌ 固件复制失败，实际文件结构："
           find openwrt/bin -type f -name "*.bin"
           exit 1
