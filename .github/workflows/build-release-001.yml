@@ -66,7 +66,7 @@ on:
 jobs:
   build:
     # 适配定时构建：手动触发显示选择的设备，定时触发显示默认设备
-    name: Build ${{ github.event.inputs.device || 'netcore-n60-pro' }}
+    name: Build ${{ github.event.inputs.device || 'netcore-n60' }}
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -86,7 +86,7 @@ jobs:
         git config --global user.email 'action@github.com'
         echo build_dir="/builder" >> "$GITHUB_ENV"
         # 新增1：定义定时构建的默认参数（不影响手动触发）
-        echo "DEFAULT_DEVICE=netcore-n60-pro" >> "$GITHUB_ENV"
+        echo "DEFAULT_DEVICE=netcore-n60" >> "$GITHUB_ENV"
         echo "DEFAULT_LAN=10.0.0.1" >> "$GITHUB_ENV"
         echo "DEFAULT_WIFI=ZeroWrt" >> "$GITHUB_ENV"
         echo "DEFAULT_PW=password" >> "$GITHUB_ENV"
