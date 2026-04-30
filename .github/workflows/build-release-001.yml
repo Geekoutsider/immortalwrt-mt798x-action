@@ -159,7 +159,21 @@ jobs:
         
         # 执行编译脚本（保留原有逻辑）
         bash <(curl -sS http://127.0.0.1:8080/build.sh) $DEVICE
-        cd openwrt
+
+        # 👇👇👇 关键修复，从这里开始加
+        cd openwrt || exit 1
+
+        echo "🛠 强制指定设备 netcore_n60"
+
+        cat >> .config <<EOF
+        CONFIG_TARGET_mediatek=y
+        CONFIG_TARGET_mediatek_filogic=y
+        CONFIG_TARGET_mediatek_filogic_DEVICE_netcore_n60=y
+        EOF
+
+        make defconfig
+        echo "🧪 检查是否生效："
+        grep netcore .config || true
         tags=$(git branch --show-current)
         # 新增4：拼接带日期的标签（格式：openwrt-24.10-6.6-25.12.24）
         final_tag="openwrt-${tags}-${{ env.BUILD_DATE }}"
