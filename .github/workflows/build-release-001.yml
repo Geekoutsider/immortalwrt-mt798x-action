@@ -148,36 +148,36 @@ jobs:
       run: |
         # 新增3：适配定时/手动构建的参数传递（兜底默认值）
         DEVICE="${{ github.event.inputs.device || env.DEFAULT_DEVICE }}"
-        BUILD_OPT="${{ github.event.inputs.build_options || env.DEFAULT_OPTIONS }}"
         LAN="${{ github.event.inputs.lan_addr || env.DEFAULT_LAN }}"
         WIFI_NAME="${{ github.event.inputs.wifi_name || env.DEFAULT_WIFI }}"
         ROOT_PASSWORD="${{ github.event.inputs.root_password || env.DEFAULT_PW }}"
         
-        # 保留你原有的参数导出逻辑，仅替换为上面的兼容变量
-        export $BUILD_OPT LAN=$LAN WIFI_NAME=$WIFI_NAME
-        [ -n "$ROOT_PASSWORD" ] && export ROOT_PASSWORD="$ROOT_PASSWORD"
-        
-        # 执行编译脚本（保留原有逻辑）
-        bash <(curl -sS http://127.0.0.1:8080/build.sh) $DEVICE
+        echo "🚀 开始官方编译流程..."
 
-        # 👇👇👇 关键修复，从这里开始加
-        cd openwrt || exit 1
+        # 1️⃣ 克隆源码（ImmortalWrt）
+        git clone https://github.com/immortalwrt/immortalwrt openwrt
+        cd openwrt
 
-        echo "🛠 强制指定设备 netcore_n60"
-
-        cat >> .config <<EOF
+        # 2️⃣ 更新 feeds
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+   
+        # 3️⃣ 写入设备配置  
+        cat > .config <<EOF
         CONFIG_TARGET_mediatek=y
         CONFIG_TARGET_mediatek_filogic=y
         CONFIG_TARGET_mediatek_filogic_DEVICE_netcore_n60=y
+        CONFIG_LUCI_LANG_zh_Hans=y
         EOF
 
         make defconfig
         echo "🧪 检查是否生效："
         grep netcore .config || true
-        tags=$(git branch --show-current)
-        # 新增4：拼接带日期的标签（格式：openwrt-24.10-6.6-25.12.24）
-        final_tag="openwrt-${tags}-${{ env.BUILD_DATE }}"
-        echo "latest_release=$final_tag" >>$GITHUB_ENV
+        # 4️⃣ 下载依赖
+        make download -j$(nproc)
+
+        # 5️⃣ 正式编译（关键）
+        make -j$(nproc) V=s
 
     - name: Extensive logs after a failed compilation
       working-directory: /builder
